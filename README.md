@@ -3,7 +3,7 @@
 See our home page at https://veles.io or visit us on IRC:
 [#veles](https://webchat.freenode.net/?channels=#veles) at freenode.
 
-![BIOS dump analyzed using Veles](resources/screens/bios_dump.png)
+![BIOS dump analyzed using Veles](resources/screens/tarball.png)
 
 ## Binaries
 
