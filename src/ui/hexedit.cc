@@ -67,7 +67,10 @@ void HexEdit::recalculateValues() {
   // Plus one only for address
   rowsCount_ = data_rows + 1;
   // Plus one for partially visible row
-  rowsOnScreen_ = viewport()->height() / charHeight_ + 1;
+  totallyVisibleRows_ = viewport()->height() / charHeight_;
+  rowsOnScreen_ = viewport()->height() % charHeight_ == 0
+                      ? totallyVisibleRows_
+                      : totallyVisibleRows_ + 1;
 
   // Spacing needs to be odd for proper border alignment.
   spaceAfterByte_ = ((charWidth_ / 3) | 1);
@@ -79,8 +82,8 @@ void HexEdit::recalculateValues() {
   lineWidth_ =
       startMargin_ + addressWidth_ + hexAreaWidth_ + asciiWidth_ + endMargin_;
 
-  verticalScrollBar()->setRange(0, data_rows - 1);
-  verticalScrollBar()->setPageStep(rowsOnScreen_);
+  verticalScrollBar()->setRange(0, data_rows - totallyVisibleRows_ + 1);
+  verticalScrollBar()->setPageStep(totallyVisibleRows_);
   startRow_ = verticalScrollBar()->value();
 
   horizontalScrollBar()->setRange(0, lineWidth_ - viewport()->width());
@@ -352,18 +355,18 @@ HexEdit::HexEdit(FileBlobModel* dataModel, QItemSelectionModel* selectionModel,
   });
 
   createAction(util::settings::shortcuts::HEX_MOVE_TO_NEXT_PAGE, [this]() {
-    setSelection(current_position_ + bytesPerRow_ * rowsOnScreen_,
+    setSelection(current_position_ + bytesPerRow_ * totallyVisibleRows_,
                  selection_size_);
-    scrollRows(rowsOnScreen_);
+    scrollRows(totallyVisibleRows_);
     if (!isByteVisible(current_position_)) {
       scrollToByte(current_position_, /*minimal_change=*/true);
     }
   });
 
   createAction(util::settings::shortcuts::HEX_MOVE_TO_PREV_PAGE, [this]() {
-    setSelection(current_position_ - bytesPerRow_ * rowsOnScreen_,
+    setSelection(current_position_ - bytesPerRow_ * totallyVisibleRows_,
                  selection_size_);
-    scrollRows(-rowsOnScreen_);
+    scrollRows(-totallyVisibleRows_);
     if (!isByteVisible(current_position_)) {
       scrollToByte(current_position_, /*minimal_change=*/true);
     }
@@ -386,6 +389,8 @@ HexEdit::HexEdit(FileBlobModel* dataModel, QItemSelectionModel* selectionModel,
 
   createAction(util::settings::shortcuts::HEX_MOVE_TO_END_OF_FILE, [this]() {
     setSelection(dataBytesCount_ - 1, selection_size_, /*set_visible=*/true);
+	// Scroll all the way to the end
+    scrollToByte(current_position_, /*minimal_change=*/false);
   });
 
   createAction(util::settings::shortcuts::HEX_MOVE_TO_NEXT_DIGIT, [this]() {
@@ -437,16 +442,16 @@ HexEdit::HexEdit(FileBlobModel* dataModel, QItemSelectionModel* selectionModel,
                [this]() { scrollRows(1); });
 
   createAction(util::settings::shortcuts::HEX_SELECT_NEXT_PAGE, [this]() {
-    setSelectionEnd(current_position_ + bytesPerRow_ * rowsOnScreen_);
-    scrollRows(rowsOnScreen_);
+    setSelectionEnd(current_position_ + bytesPerRow_ * totallyVisibleRows_);
+    scrollRows(totallyVisibleRows_);
     if (!isByteVisible(current_position_)) {
       scrollToByte(current_position_, /*minimal_change=*/true);
     }
   });
 
   createAction(util::settings::shortcuts::HEX_SELECT_PREV_PAGE, [this]() {
-    setSelectionEnd(current_position_ - bytesPerRow_ * rowsOnScreen_);
-    scrollRows(-rowsOnScreen_);
+    setSelectionEnd(current_position_ - bytesPerRow_ * totallyVisibleRows_);
+    scrollRows(-totallyVisibleRows_);
     if (!isByteVisible(current_position_)) {
       scrollToByte(current_position_, /*minimal_change=*/true);
     }
@@ -1249,9 +1254,9 @@ void HexEdit::mouseDoubleClickEvent(QMouseEvent* event) {
 
 bool HexEdit::isRangeVisible(qint64 start, qint64 size) {
   qint64 visible_start = startRow_ * bytesPerRow_;
-  qint64 visible_end = (startRow_ + rowsOnScreen_) * bytesPerRow_;
+  qint64 visible_end = (startRow_ + totallyVisibleRows_) * bytesPerRow_;
 
-  return !(start >= visible_end || (start + size) <= visible_start);
+  return start >= visible_end && (start + size) <= visible_start;
 }
 
 bool HexEdit::isByteVisible(qint64 bytePos) {
@@ -1268,7 +1273,7 @@ void HexEdit::scrollToByte(qint64 bytePos, bool minimal_change) {
 
   auto new_top_row = byte_row;
   if (minimal_change && byte_row > current_top_row) {
-    new_top_row = byte_row - rowsOnScreen_ + 1;
+    new_top_row = byte_row - totallyVisibleRows_ + 1;
   }
 
   verticalScrollBar()->setValue(new_top_row);

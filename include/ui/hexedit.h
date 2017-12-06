@@ -105,6 +105,7 @@ class HexEdit : public QAbstractScrollArea {
   /** Number of rows displayed on the screen (calculated from window and font
    * height) */
   qint64 rowsOnScreen_;
+  qint64 totallyVisibleRows_;
   /** Number of hex chars used to display one byte */
   qint64 byteCharsCount_;
   /** maximum value of byte */
