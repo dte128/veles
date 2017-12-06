@@ -389,7 +389,7 @@ HexEdit::HexEdit(FileBlobModel* dataModel, QItemSelectionModel* selectionModel,
 
   createAction(util::settings::shortcuts::HEX_MOVE_TO_END_OF_FILE, [this]() {
     setSelection(dataBytesCount_ - 1, selection_size_, /*set_visible=*/true);
-	// Scroll all the way to the end
+    // Scroll all the way to the end
     scrollToByte(current_position_, /*minimal_change=*/false);
   });
 
