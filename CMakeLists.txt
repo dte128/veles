@@ -48,19 +48,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")  # For clang-tidy
   set(ADDITIONAL_LINK_LIBRARIES "pthread")
 endif()
-if(MSVC)
-  # Uncomment this line to use instrumentation in Visual Studio.
-  # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /Profile")
-
-  # Set exception handling mode and linking mode.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc ")
-  # Build with multiple processes.
-  # see: https://docs.microsoft.com/en-us/cpp/build/reference/mp-build-with-multiple-processes
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP ")
-endif()
-if(APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")  # For clang-tidy
-endif()
 
 if(WIN32)
   set(WINDOWS_APPLICATION_OUT_DIRECTORY "Veles UI")
@@ -375,6 +362,7 @@ add_executable(main_ui
     ${INCLUDE_DIR}/ui/shortcutedit.h
     ${INCLUDE_DIR}/ui/shortcutssettings.h
     ${INCLUDE_DIR}/ui/disasm/disasm.h
+    ${INCLUDE_DIR}/ui/disasm/mock_types.h
     ${SRC_DIR}/ui/main.cc
     ${SRC_DIR}/ui/logwidget.cc
     ${SRC_DIR}/ui/veles_mainwindow.cc

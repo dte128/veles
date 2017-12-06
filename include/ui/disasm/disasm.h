@@ -1,5 +1,11 @@
+#include <memory>
 #include <QFuture>
+#include <QtConcurrent/QtConcurrent>
 #include <QtGlobal>
+
+#include "tmp_types.h"
+
+#pragma once
 
 namespace veles {
 namespace ui {
@@ -28,7 +34,7 @@ struct Chunk {
 
 struct Entry {
   Bookmark pos;
-  virtual ~Entry() {}
+  virtual ~Entry() = 0;
 };
 
 struct EntryChunkBegin : Entry {
@@ -90,28 +96,30 @@ using ScrollbarIndex = uint64_t;
 
 class Window {
  public:
-  void seek(const Bookmark& pos, unsigned prev_n, unsigned next_n);
-  virtual ~Window() {}
+  virtual void seek(const Bookmark& pos, unsigned prev_n, unsigned next_n) = 0;
+  virtual Bookmark currentPosition() = 0;
+  virtual ScrollbarIndex currentScrollbarIndex() = 0;
+  virtual ScrollbarIndex maxScrollbarIndex() = 0;
+  virtual const std::vector<Chunk>& breadcrumbs() = 0;
+  virtual const std::vector<std::unique_ptr<Entry>>& entries() = 0;
 
-  Bookmark currentPosition();
-  ScrollbarIndex currentScrollbarIndex();
-  ScrollbarIndex maxScrollbarIndex();
-  const std::vector<std::unique_ptr<Entry>>& entries();
-  const std::vector<Chunk>& breadcrumbs();
+  virtual ~Window() {};
 
  signals:
-  void updateScrollbar();
-  void dataChanged();
+  virtual void updateScrollbar() = 0;
+  virtual void dataChanged() = 0;
 };
 
 class Blob {
  public:
-  std::unique_ptr<Window> createWindow(const Bookmark& pos, unsigned prev_n,
-                                       unsigned prev_n);
-  QFuture<Bookmark> getEntrypoint();
-  QFuture<Bookmark> getPosition(ScrollbarIndex index);
-  QFuture<Bookmark> getPositionByChunk(const ChunkID& chunk);
-  virtual ~Blob() {}
+  virtual std::unique_ptr<Window> createWindow(const Bookmark& pos,
+                                               unsigned prev_n,
+                                               unsigned next_n) = 0;
+  virtual QFuture<Bookmark> getEntrypoint() = 0;
+  virtual QFuture<Bookmark> getPosition(ScrollbarIndex index) = 0;
+  virtual QFuture<Bookmark> getPositionByChunk(const ChunkID& chunk) = 0;
+
+  virtual ~Blob() {};
 };
 
 }  // namespace disasm
