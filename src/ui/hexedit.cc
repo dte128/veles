@@ -64,10 +64,10 @@ void HexEdit::recalculateValues() {
   addressWidth_ = addressBytes_ * 2 * charWidth_ + verticalAreaSpaceWidth_;
 
   auto data_rows = (dataBytesCount_ + bytesPerRow_ - 1) / bytesPerRow_;
-  // Plus one only for address
+  // Plus one for address
   rowsCount_ = data_rows + 1;
-  // Plus one for partially visible row
   totallyVisibleRows_ = viewport()->height() / charHeight_;
+  // Plus one for partially visible row
   rowsOnScreen_ = viewport()->height() % charHeight_ == 0
                       ? totallyVisibleRows_
                       : totallyVisibleRows_ + 1;
