@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <QColorDialog>
 #include <QDialog>
 #include <QtCore>
 
@@ -37,6 +38,10 @@ class OptionsDialog : public QDialog {
 
  public slots:
   void accept() override;
+
+ private:
+  QColorDialog* color_3d_begin_dialog_;
+  QColorDialog* color_3d_end_dialog_;
 };
 
 }  // namespace ui

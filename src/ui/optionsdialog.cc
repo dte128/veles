@@ -17,10 +17,14 @@
 #include "ui/optionsdialog.h"
 
 #include <QMessageBox>
+#include <QPushButton>
 
 #include "ui_optionsdialog.h"
+#include "ui/veles_mainwindow.h"
 #include "util/settings/hexedit.h"
 #include "util/settings/theme.h"
+#include "util/settings/visualization.h"
+#include "visualization/trigram.h"
 
 namespace veles {
 namespace ui {
@@ -32,8 +36,32 @@ OptionsDialog::OptionsDialog(QWidget* parent)
 
   connect(ui->hexColumnsAutoCheckBox, &QCheckBox::stateChanged,
           [this](int state) {
-            ui->hexColumnsSpinBox->setEnabled(state != Qt::Checked);
-          });
+    ui->hexColumnsSpinBox->setEnabled(state != Qt::Checked);
+  });
+
+  // Initialize color pickers
+  color_3d_begin_dialog_ = new QColorDialog(this);
+  color_3d_end_dialog_ = new QColorDialog(this);
+  connect(ui->colorBeginButton, &QPushButton::clicked, color_3d_begin_dialog_, &QColorDialog::show);
+  connect(ui->colorEndButton, &QPushButton::clicked, color_3d_end_dialog_, &QColorDialog::show);
+  auto update_button_color = [this](QPushButton* button, const QColor& new_color) {
+    QPalette pal = button->palette();
+    pal.setColor(QPalette::Button, new_color);
+    button->setPalette(pal);
+    button->update();
+  };
+  auto color_begin = util::settings::visualization::colorBegin();
+  auto color_end = util::settings::visualization::colorEnd();
+  update_button_color(ui->colorBeginButton, color_begin);
+  color_3d_begin_dialog_->setCurrentColor(color_begin);
+  update_button_color(ui->colorEndButton, color_end);
+  color_3d_end_dialog_->setCurrentColor(color_end);
+  connect(color_3d_begin_dialog_, &QColorDialog::colorSelected, [this, update_button_color](const QColor& color) {
+    update_button_color(ui->colorBeginButton, color);
+  });
+  connect(color_3d_end_dialog_, &QColorDialog::colorSelected, [this, update_button_color](const QColor& color) {
+    update_button_color(ui->colorEndButton, color);
+  });
 }
 
 OptionsDialog::~OptionsDialog() { delete ui; }
@@ -62,6 +90,15 @@ void OptionsDialog::accept() {
   util::settings::hexedit::setResizeColumnsToWindowWidth(
       ui->hexColumnsAutoCheckBox->checkState() == Qt::Checked);
   util::settings::hexedit::setColumnsNumber(ui->hexColumnsSpinBox->value());
+
+  util::settings::visualization::setColorBegin(color_3d_begin_dialog_->currentColor());  //TODO(mkow): fix it
+  util::settings::visualization::setColorEnd(color_3d_end_dialog_->currentColor());
+
+  for (auto main_window : MainWindowWithDetachableDockWidgets::getMainWindows()) {
+    for (auto widget : main_window->findChildren<visualization::TrigramWidget*>()) {
+      widget->reloadSettings();
+    }
+  }
 
   if (restart_needed) {
     QMessageBox::about(
