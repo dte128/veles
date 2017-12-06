@@ -1,4 +1,5 @@
-#pragma once
+#include <QFuture>
+#include <QtGlobal>
 
 namespace veles {
 namespace ui {
